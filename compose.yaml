@@ -9,7 +9,7 @@ services:
       - ./embeddings:/app
     depends_on:
       - postgres
-    command: tail -f /dev/null
+    command: tail -f /dev/null # keep container running
   postgres:
     image: pgvector/pgvector:pg16
     container_name: company_db
