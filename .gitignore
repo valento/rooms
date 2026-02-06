@@ -1,0 +1,46 @@
+# Python (already have these)
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Environment variables (IMPORTANT - contains secrets!)
+.env
+.env.local
+.env.production
+*.env
+
+# Docker
+docker-compose.override.yml
+
+# PostgreSQL data (if mounted locally)
+postgres_data/
+pgdata/
+data/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# FastAPI / Python extras
+*.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Model files (if large embeddings models are stored locally)
+*.bin
+*.pt
+*.onnx
+models/
