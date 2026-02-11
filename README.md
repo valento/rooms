@@ -56,11 +56,23 @@ ORDER BY rank DESC;
 #  BLOG       | 0.98724616
 #  ABOUT      | 0.38097197
 # (2 rows)
-
 ```
+# Add Semantics to Search
+Semantics are Vectors, 436 to 1500, that generate spaces for each text chunk  
+✅ Generating embeddings thorugh embedding model - all-MiniLM-L6-v2  
+✅ Storing generated vectors in PostgreSQL - '*embedding*'  
+✅ Cosine similarity search to compair semantic vectors  
+✅ Building [Contextual Retrieval](https://www.anthropic.com/engineering/contextual-retrievals) API  
+
 &nbsp;&nbsp;
 #
+
 # LLM → MCP → DB Architecture - local only, not for deployment
+=======
+### <span style='color: orange'> *(turns out this is not ncesary: I won't even use Claude and therefore - no MCP either ClaudeDesktop only works locally)*
+# LLM → MCP → DB Architecture
+(anyways this was done in company-mcp directory, check it out)
+
 ```sh
 User → Website → Claude API
                    ↓
