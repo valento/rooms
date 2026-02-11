@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from typing import Optional
 from config import settings
 from services.search import semantic_search
 from services.database import get_db_connection
+from datetime import datetime
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -24,12 +25,44 @@ app.add_middleware(
 class SearchRequest(BaseModel):
     query: str
     limit: Optional[int] = 10
-    threshold: Optional[float] = 0.5
+    threshold: Optional[float] = 0.3
 
+class SearchResultItem(BaseModel):
+    id: int
+    title: str
+    body: str
+    metadata: dict
+    created_at: datetime
+    updated_at: datetime
+    semantic_similarity: float
+    priority: int
+    final_score: float
+
+    @computed_field
+    @property
+    def snippet(self) -> str:
+        return self.body[:150] + "..." if len(self.body) > 150 else self.body
+    
+    @computed_field
+    @property
+    def url(self) -> str:
+        # Get content_type from metadata for URL generation
+        content_type = self.metadata.get('content_type', 'read')
+        category = self.metadata.get('read_category') or self.metadata.get('app_type', 'content')
+        return f"/{content_type}/{category}/{self.id}"
+    
+    @computed_field
+    @property
+    def content_type(self) -> str:
+        return self.metadata.get('content_type', 'unknown')
+    
 class SearchResponse(BaseModel):
-    results: list
+    results: list[SearchResultItem]
     count: int
     query: str
+    
+class Config:
+    fields = {"body": {"execute": True}}
 
 @app.get("/health")
 async def health_check():
@@ -60,6 +93,9 @@ async def search_company_content(request: SearchRequest):
             limit=request.limit,
             threshold=request.threshold
         )
+
+        # if results is None:
+        #     results = []
         
         return SearchResponse(
             results=results,

@@ -60,7 +60,7 @@ ORDER BY rank DESC;
 ```
 &nbsp;&nbsp;
 #
-# LLM → MCP → DB Architecture
+# LLM → MCP → DB Architecture - local only, not for deployment
 ```sh
 User → Website → Claude API
                    ↓
@@ -75,9 +75,101 @@ User → Website → Claude API
                PostgreSQL
              (web_api role)
 ```
-# <span style='color:red'>**!**</span> ---
+# <span style='color:red'>**! Steps to create semantic searches**</span>
+## Table
+```sql
 
+CREATE TABLE company.content_blocks (
+    id SERIAL PRIMARY KEY,
+    block_type VARCHAR(50) NOT NULL CHECK (block_type IN ('ABOUT', 'SERVICES', 'CASE_STUDIES', 'BLOG')),
+    title VARCHAR(255) NOT NULL,
+    body TEXT NOT NULL,
+    metadata JSONB DEFAULT '{}',
+    search_vector TSVECTOR,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+```
+## <span style='color:orange'>Function to update tsvector</span>
+```sql
+
+CREATE OR REPLACE FUNCTION company.update_search_vector()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.search_vector := 
+        setweight(to_tsvector('english', COALESCE(NEW.title, '')), 'A') ||
+        setweight(to_tsvector('english', COALESCE(NEW.body, '')), 'B');
+    NEW.updated_at := NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+```
+## <span style='color:orange'>Trigger update function before every insert</span>
+```sql
+
+CREATE TRIGGER content_blocks_search_update
+BEFORE INSERT OR UPDATE ON company.content_blocks
+FOR EACH ROW
+EXECUTE FUNCTION company.update_search_vector();
+CREATE TRIGGER
+
+```
+### <span style='color:orange'>Test it without indexation
+```sql
+
+INSERT INTO company.content_blocks (block_type, title, body, metadata)
+VALUES (
+    'ABOUT',
+    'Our Company Story',
+    'We started in 2015 with a mission to simplify software development for small businesses.',
+    '{"section": "history"}'
+);
+-- INSERT 0 1
+-- Test full text search
+SELECT block_type, title FROM company.content_blocks WHERE search_vector @@ to_tsquery('english','business');
+--  block_type |                   title                   
+-- ------------+-------------------------------------------
+--  ABOUT      | Our Company Story
+--  SERVICES   | Mobile Apps
+--  BLOG       | Why Small Businesses Need Custom Software
+-- (3 rows)
+
+-- or
+
+-- @@ to_tsquery('english','business | success') or @@ to_tsquery('english','business & success')
+```
+
+### <span style='color:orange'>Index search_vector (tsvector) with GIN</span>
+```sql
+CREATE INDEX idx_content_blocks_search 
+ON company.content_blocks 
+USING GIN (search_vector);
+-- CREATE INDEX
+
+```
+
+### <span style='color:orange'>Test again: GIN-indexed tsvector</span>
+```sql
+SELECT 
+    block_type, 
+    title, 
+    ts_rank(search_vector, to_tsquery('english', 'software')) AS rank
+FROM company.content_blocks 
+WHERE search_vector @@ to_tsquery('english', 'software')
+ORDER BY rank DESC;
+
+--  block_type |                   title                   |    rank    
+-- ------------+-------------------------------------------+------------
+--  BLOG       | Why Small Businesses Need Custom Software | 0.66871977
+--  ABOUT      | Our Company Story                         | 0.24317084
+-- (2 rows)
+
+```
 &nbsp;&nbsp;&nbsp;&nbsp;
+#  
+
 
 ### Check for docker mapped port
 ```sh
