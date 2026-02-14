@@ -16,6 +16,9 @@ build/
 # Docker
 docker-compose.override.yml
 
+# DB
+*.sql
+
 # PostgreSQL data (if mounted locally)
 postgres_data/
 pgdata/

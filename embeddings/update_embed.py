@@ -8,7 +8,7 @@ conn = psycopg2.connect(
     port=5432,
     database="company_data",
     user="admin",
-    password="changeme" #"wQe!b2_ap1"
+    password="K0l(mbin)" #"wQe!b2_ap1"
 )
 
 # Load embedding model

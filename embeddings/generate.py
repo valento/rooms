@@ -10,7 +10,7 @@ conn = psycopg2.connect(
     host="postgres",      # container name = hostname in docker network
     database="company_data",
     user="admin",
-    password="changeme"   # use your actual password
+    password="K0l(mbin)"   # use your actual password
 )
 cur = conn.cursor()
 
