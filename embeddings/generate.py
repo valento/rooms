@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 import psycopg2
 
@@ -8,9 +10,9 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 # Connect to PostgreSQL
 conn = psycopg2.connect(
     host="postgres",      # container name = hostname in docker network
-    database="company_data",
-    user="admin",
-    password="K0l(mbin)"   # use your actual password
+    database=os.getenv("POSTGRES_DB"),
+    user=os.getenv("POSTGRES_USER"),
+    password=os.getenv("POSTGRES_PASSWORD")
 )
 cur = conn.cursor()
 

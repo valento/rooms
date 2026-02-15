@@ -46,4 +46,4 @@ htmlcov/
 *.bin
 *.pt
 *.onnx
-models/
+models/.env

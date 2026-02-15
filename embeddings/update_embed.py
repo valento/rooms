@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import psycopg2
 from sentence_transformers import SentenceTransformer
 import json
@@ -6,9 +8,9 @@ import json
 conn = psycopg2.connect(
     host="postgres",  # or "postgres" if running inside container
     port=5432,
-    database="company_data",
-    user="admin",
-    password="K0l(mbin)" #"wQe!b2_ap1"
+    database=os.getenv("POSTGRES_DB"),
+    user=os.getenv("POSTGRES_USER"),
+    password=os.getenv("POSTGRES_PASSWORD")
 )
 
 # Load embedding model
