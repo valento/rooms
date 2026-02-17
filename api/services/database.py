@@ -23,9 +23,8 @@ def execute_query(query, params=None):
     try:
         with conn.cursor(cursor_factory=RealDictCursor) as cursor:
             cursor.execute(query, params)
-            if cursor.description:  # SELECT query
-                return cursor.fetchall()
-            conn.commit()  # INSERT/UPDATE/DELETE
-            return None
+            result = cursor.fetchall() if cursor.description else None
+            conn.commit()  # ← Always commit (safe for SELECT too)
+            return result
     finally:
         conn.close()

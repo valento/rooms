@@ -43,12 +43,18 @@ class SearchResponse(BaseModel):
 class ContentDetail(BaseModel):
     id: int
     title: str
+    deck: Optional[str] = None
     body: str
-    metadata: dict
+    author_name: Optional[str] = None  # From JOIN
     created_at: datetime
     updated_at: datetime
-    data_schema: Optional[dict] = None
-    ui_schema: Optional[dict] = None
+    metadata: dict
+    slug: Optional[str] = None
+    author_id: Optional[int] = None
+    author_username: Optional[str] = None
+    
+    # data_schema: Optional[dict] = None
+    # ui_schema: Optional[dict] = None
     
     @computed_field
     @property
