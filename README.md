@@ -93,7 +93,7 @@ User → Website → Claude API
 
 CREATE TABLE company.content_blocks (
     id SERIAL PRIMARY KEY,
-    block_type VARCHAR(50) NOT NULL CHECK (block_type IN ('ABOUT', 'SERVICES', 'CASE_STUDIES', 'BLOG')),
+    -- block_type VARCHAR(50) NOT NULL CHECK (block_type IN ('ABOUT', 'SERVICES', 'CASE_STUDIES', 'BLOG')),
     title VARCHAR(255) NOT NULL,
     body TEXT NOT NULL,
     metadata JSONB DEFAULT '{}',

@@ -4,6 +4,7 @@ from typing import Optional
 
 class SearchRequest(BaseModel):
     query: str
+    user_id: Optional[int] = None  # From auth token in production
     limit: Optional[int] = 10
     threshold: Optional[float] = 0.3
 
@@ -45,13 +46,15 @@ class ContentDetail(BaseModel):
     title: str
     deck: Optional[str] = None
     body: str
-    author_name: Optional[str] = None  # From JOIN
+    author_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     metadata: dict
     slug: Optional[str] = None
     author_id: Optional[int] = None
     author_username: Optional[str] = None
+    parent_id: Optional[int] = None
+    sequence_order: Optional[int] = None
     
     # data_schema: Optional[dict] = None
     # ui_schema: Optional[dict] = None
