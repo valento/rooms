@@ -24,12 +24,12 @@ class SearchResultItem(BaseModel):
     def snippet(self) -> str:
         return self.body[:150] + "..." if len(self.body) > 150 else self.body
     
-    @computed_field
-    @property
-    def url(self) -> str:
-        content_type = self.metadata.get('content_type', 'read')
-        category = self.metadata.get('read_category') or self.metadata.get('app_type', 'content')
-        return f"/{content_type}/{category}/{self.id}"
+    # @computed_field
+    # @property
+    # def url(self) -> str:
+    #     content_type = self.metadata.get('content_type', 'read')
+    #     category = self.metadata.get('read_category') or self.metadata.get('app_type', 'content')
+    #     return f"/read/{self.id}"
     
     @computed_field
     @property
@@ -46,19 +46,31 @@ class ContentDetail(BaseModel):
     title: str
     deck: Optional[str] = None
     body: str
-    author_name: Optional[str] = None
+    slug: Optional[str] = None
+    metadata: dict
     created_at: datetime
     updated_at: datetime
-    metadata: dict
-    slug: Optional[str] = None
+    
+    # Author
     author_id: Optional[int] = None
+    author_name: Optional[str] = None
     author_username: Optional[str] = None
+    
+    # Widgets
+    widget_size: Optional[str] = 'medium'
+    widget_vertical: bool = False
+    
+    # Scoring/ranking
+    view_count: int = 0
+    social_score: float = 0
+    priority: int = 3
+    price: int = 0
+    
+    # Series/sequences
     parent_id: Optional[int] = None
     sequence_order: Optional[int] = None
     
-    # data_schema: Optional[dict] = None
-    # ui_schema: Optional[dict] = None
-    
+    # Computed fields
     @computed_field
     @property
     def content_type(self) -> str:

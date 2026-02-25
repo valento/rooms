@@ -47,49 +47,42 @@ async def get_series_parts(identifier: str):
     return {"parent_id": parent_id, "parts": parts, "count": len(parts)}
 
 # Get by content_id
-@router.get("/{content_id}", response_model=ContentDetail)
-async def get_content(content_id: int):
+@router.get("/{identifier}")
+async def get_content(identifier: str):
     """
-    Get a single content block by ID.
-    
-    - **content_id**: The ID of the content to retrieve
+    Get content block by id or by slug.
     """
-    try:
+    if identifier.isdigit():
         sql = """
-            SELECT 
-                c.id,
-                c.title,
-                c.deck,
-                c.body,
-                u.full_name as author_name,
-                c.created_at,
-                c.updated_at,
-                c.slug,
-                c.metadata,
-                c.author_id,
-                u.username as author_username
-            FROM company.content_blocks c
-            LEFT JOIN company.users u ON c.author_id = u.id
-            WHERE c.id = %s
+            SELECT cb.id, cb.title, cb.body, cb.deck, cb.slug, cb.metadata,
+                   cb.author_id, cb.view_count, cb.widget_size, cb.widget_vertical,
+                   cb.social_score, cb.priority, cb.price,
+                   cb.parent_id, cb.sequence_order,
+                   cb.created_at, cb.updated_at,
+                   u.full_name AS author_name, u.username AS author_username
+            FROM company.content_blocks cb
+            LEFT JOIN company.users u ON cb.author_id = u.id
+            WHERE cb.id = %s
         """
-        
-        result = execute_query(sql, (content_id,))
-        
-        if not result or len(result) == 0:
-            raise HTTPException(status_code=404, detail=f"Content {content_id} not found")
-        
-        content = result[0]
-        # content_type = content['metadata'.get('content_type', 'read')]
-        # data_schema, ui_schema = get_schemas(content_type='read')
-
-        # content['data_schema'] = data_schema
-        # content['ui_schema'] = ui_schema
-        return ContentDetail(**result[0])
+        result = execute_query(sql, (int(identifier),))
+    else:
+        sql = """
+            SELECT cb.id, cb.title, cb.body, cb.deck, cb.slug, cb.metadata,
+                   cb.author_id, cb.view_count, cb.widget_size, cb.widget_vertical,
+                   cb.social_score, cb.priority, cb.price,
+                   cb.parent_id, cb.sequence_order,
+                   cb.created_at, cb.updated_at,
+                   u.full_name AS author_name, u.username AS author_username
+            FROM company.content_blocks cb
+            LEFT JOIN company.users u ON cb.author_id = u.id
+            WHERE cb.slug = %s
+        """
+        result = execute_query(sql, (identifier,))
     
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch content: {str(e)}")
+    if not result:
+        raise HTTPException(status_code=404, detail="Content not found")
+    
+    return ContentDetail(**result[0])
 
 # Get all content
 @router.get("/", response_model=list[ContentDetail])
