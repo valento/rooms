@@ -10,6 +10,10 @@ class UserRegister(BaseModel):
     email: EmailStr
     password: str
     full_name: Optional[str] = None
+class CurrentUser(BaseModel):
+    id: int
+    email: str
+    role: str
 
 class Token(BaseModel):
     access_token: str

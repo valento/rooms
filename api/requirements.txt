@@ -12,3 +12,5 @@ passlib[bcrypt]
 python-multipart
 email-validator
 python-slugify
+sentence-transformers
+

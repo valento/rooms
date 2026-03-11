@@ -23,6 +23,10 @@ docker-compose.override.yml
 postgres_data/
 pgdata/
 data/
+toto/
+scripts/
+*.docx
+*.txt
 
 # Logs
 *.log

@@ -1,6 +1,6 @@
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, Field, computed_field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class SearchRequest(BaseModel):
     query: str
@@ -41,6 +41,15 @@ class SearchResponse(BaseModel):
     count: int
     query: str
 
+class ContentLinks(BaseModel):
+    self_link: str = Field(alias="self")
+    parent: Optional[str] = None
+    parts: Optional[str] = None
+    prev: Optional[str] = None
+    next: Optional[str] = None
+    author: Optional[str] = None
+    class Config:
+        populate_by_name = True
 class ContentDetail(BaseModel):
     id: int
     title: str
@@ -50,6 +59,8 @@ class ContentDetail(BaseModel):
     metadata: dict
     created_at: datetime
     updated_at: datetime
+    category_id: Optional[int] = None
+    category_slug: Optional[str] = None
     
     # Author
     author_id: Optional[int] = None
@@ -69,6 +80,8 @@ class ContentDetail(BaseModel):
     # Series/sequences
     parent_id: Optional[int] = None
     sequence_order: Optional[int] = None
+    prev_slug: Optional[str] = None
+    next_slug: Optional[str] = None
     
     # Computed fields
     @computed_field
@@ -85,3 +98,54 @@ class ContentDetail(BaseModel):
     @property
     def tags(self) -> list[str]:
         return self.metadata.get('tags', [])
+    
+    @computed_field
+    @property
+    def _links(self) -> dict:
+        links = {"self": f"/content/{self.slug or self.id}"}
+        
+        if self.parent_id is None:
+            links["parts"] = f"/content/{self.slug or self.id}/parts"
+        else:
+            links["parent"] = f"/content/{self.parent_id}"
+        
+        if self.prev_slug:
+            links["prev"] = f"/content/{self.prev_slug}"
+        
+        if self.next_slug:
+            links["next"] = f"/content/{self.next_slug}"
+        
+        if self.author_id:
+            links["author"] = f"/users/{self.author_id}"
+        
+        return links
+    
+class CreateContentRequest(BaseModel):
+    title: str
+    deck: Optional[str] = None
+    slug: Optional[str] = None
+    category_id: Optional[int] = None
+    body: str
+    metadata: dict
+    widget_size: Optional[str] = 'medium'
+    widget_vertical: Optional[bool] = False
+    parent_id: Optional[int] = None
+    sequence_order: Optional[int] = None
+
+class UpdateContentRequest(BaseModel):
+    title: str
+    deck: Optional[str] = None
+    slug: Optional[str] = None
+    category_id: Optional[int] = None
+    body: str
+    metadata: dict
+    author_id: Optional[int] = None
+
+class BrickItem(BaseModel):
+    brick_type: str  # 'xlarge', 'large', 'medium', 'small', 'promoted'
+    items: List[ContentDetail]
+
+class BrickFeedResponse(BaseModel):
+    center: List[BrickItem]
+    left: List[BrickItem]
+    right: List[BrickItem]
