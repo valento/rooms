@@ -1,3 +1,3 @@
-from . import search, content, auth
+from . import search, content, auth, apps
 
-__all__ = [ 'search', 'content', 'auth', 'categories', 'toto2' ]
+__all__ = [ 'search', 'content', 'auth', 'categories', 'apps', 'toto2' ]

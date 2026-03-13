@@ -8,8 +8,8 @@ from pydantic import BaseModel, Field, model_validator
 
 class Toto2DrawBase(BaseModel):
     issue:      int = Field(..., ge=1,            description="Тираж number")
-    year:       int = Field(..., ge=2000, le=2100, description="e.g. 2025")
-    draw_index: int = Field(1,  ge=1,    le=2,    description="Теглене 1 or 2")
+    year:       int = Field(..., ge=1958, le=2100, description="e.g. 2025")
+    draw_index: int = Field(1,  ge=1,    le=3,    description="Теглене 1 or 3")
     n1: int = Field(..., ge=1, le=49)
     n2: int = Field(..., ge=1, le=49)
     n3: int = Field(..., ge=1, le=49)
@@ -49,8 +49,8 @@ class Toto2ImportRow(BaseModel):
         Тираж 1/2014, Теглене 2: 5 12 19 28 33 41   ← pre-2014 two draws
     """
     issue:      int        = Field(..., ge=1)
-    year:       int        = Field(..., ge=2000)
-    draw_index: int        = Field(1, ge=1, le=2)
+    year:       int        = Field(..., ge=1958)
+    draw_index: int        = Field(1, ge=1, le=3)
     numbers:    list[int]  = Field(..., min_length=6, max_length=6)
     draw_date:  date | None = None
 

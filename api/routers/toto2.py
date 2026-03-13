@@ -104,19 +104,33 @@ def get_draws_count(year: int | None = None):
 # GET /toto2/stats/frequency
 # ---------------------------------------------------------------------------
 @router.get("/stats/frequency")
-def get_frequency():
+def get_frequency(
+    year_from: int | None = None,
+    year_to:   int | None = None,
+):
     """
     Return all 49 numbers sorted by frequency descending.
-    Hot numbers (most drawn) at the top, cold numbers at the bottom.
+    Optionally filtered by year range (year_from..year_to).
+
+    If no range given → full history.
+    The UI slider maps directly to these two query params.
+
+    Example:
+        GET /toto2/stats/frequency?year_from=2023&year_to=2025
     """
-    result = execute_query(
-        """
-        SELECT number, frequency, updated_at
-        FROM toto2.number_stats
-        ORDER BY frequency DESC, number ASC
-        """
-    )
-    return result or []
+    from services.toto2_stats import compute_frequency, get_year_bounds
+
+    freq  = compute_frequency(year_from=year_from, year_to=year_to)
+    min_year, max_year = get_year_bounds()
+
+    return {
+        "year_from": year_from or min_year,
+        "year_to":   year_to   or max_year,
+        "numbers": [
+            {"number": num, "frequency": count}
+            for num, count in sorted(freq.items(), key=lambda x: -x[1])
+        ]
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -127,3 +141,22 @@ def trigger_rebuild():
     """Manually trigger a stats rebuild (e.g. after fixing imported data)."""
     rebuild_stats()
     return {"status": "ok", "message": "Stats rebuilt successfully"}
+
+
+# ---------------------------------------------------------------------------
+# GET /toto2/stats/absence
+# ---------------------------------------------------------------------------
+@router.get("/stats/absence")
+def get_absence():
+    """
+    Return all 49 numbers sorted by absence streak descending.
+    Numbers missing from the most recent consecutive draws appear first.
+    """
+    result = execute_query(
+        """
+        SELECT number, absence_streak, frequency, updated_at
+        FROM toto2.number_stats
+        ORDER BY absence_streak DESC, number ASC
+        """
+    )
+    return result or []

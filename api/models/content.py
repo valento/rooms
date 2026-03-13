@@ -70,6 +70,12 @@ class ContentDetail(BaseModel):
     # Widgets
     widget_size: Optional[str] = 'medium'
     widget_vertical: bool = False
+
+    # App registry (for content_type: "play")
+    package_name: Optional[str] = None
+    component_name: Optional[str] = None
+    route_path: Optional[str] = None
+    app_config: Optional[dict] = None
     
     # Scoring/ranking
     view_count: int = 0
@@ -147,5 +153,5 @@ class BrickItem(BaseModel):
 
 class BrickFeedResponse(BaseModel):
     center: List[BrickItem]
-    left: List[BrickItem]
+    left: List[ContentDetail]
     right: List[BrickItem]
