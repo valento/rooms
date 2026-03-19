@@ -1,7 +1,7 @@
 from typing import Optional, List
 from models.content import BrickItem, ContentDetail
 
-def build_center_feed(items: List[ContentDetail]) -> List[BrickItem]:
+def build_feed(items: List[ContentDetail]) -> List[BrickItem]:
     bricks = []
     remaining = list(items)  # work on a copy
     

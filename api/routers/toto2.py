@@ -14,7 +14,7 @@ from schemas.toto2 import (
     Toto2DrawRead,
 )
 from services.toto2_importer import import_draws
-from services.toto2_stats import rebuild_stats
+from services.toto2_stats import rebuild_stats, get_total_draws
 from services.database import execute_query
 
 router = APIRouter(prefix="/toto2", tags=["toto2"])
@@ -122,10 +122,14 @@ def get_frequency(
 
     freq  = compute_frequency(year_from=year_from, year_to=year_to)
     min_year, max_year = get_year_bounds()
+    yf = year_from  or min_year
+    yt = year_to    or max_year
+    total_draws = get_total_draws(yf, yt)
 
     return {
-        "year_from": year_from or min_year,
-        "year_to":   year_to   or max_year,
+        "year_from":    yf,
+        "year_to":      yt,
+        "total_draws":  total_draws,
         "numbers": [
             {"number": num, "frequency": count}
             for num, count in sorted(freq.items(), key=lambda x: -x[1])
@@ -160,3 +164,19 @@ def get_absence():
         """
     )
     return result or []
+
+
+@router.get("/stats/number/{number}/yearly")
+def get_number_yearly(number: int):
+    """
+    Yearly frequency breakdown for a single number.
+    Used for trend charts in the UI.
+    """
+    if not (1 <= number <= 49):
+        raise HTTPException(status_code=400, detail="Number must be between 1 and 49")
+
+    from services.toto2_stats import get_number_yearly
+    return {
+        "number": number,
+        "yearly": get_number_yearly(number),
+    }

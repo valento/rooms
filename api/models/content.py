@@ -50,6 +50,7 @@ class ContentLinks(BaseModel):
     author: Optional[str] = None
     class Config:
         populate_by_name = True
+        
 class ContentDetail(BaseModel):
     id: int
     title: str
@@ -153,5 +154,5 @@ class BrickItem(BaseModel):
 
 class BrickFeedResponse(BaseModel):
     center: List[BrickItem]
-    left: List[ContentDetail]
+    left: List[BrickItem]
     right: List[BrickItem]

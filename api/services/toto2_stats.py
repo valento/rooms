@@ -132,3 +132,41 @@ def compute_absence_streaks() -> dict[int, int]:
         streaks[num] = total_draws
 
     return streaks
+
+
+def get_total_draws(year_from: int, year_to: int) -> int:
+    """Count draws in a given year range."""
+    result = execute_query(
+        "SELECT COUNT(*) AS total FROM toto2.draws WHERE year BETWEEN %s AND %s",
+        (year_from, year_to),
+    )
+    return result[0]["total"] if result else 0
+
+
+def get_number_yearly(number: int) -> list[dict]:
+    """
+    Frequency of a single number broken down by year.
+    Includes total draws per year for normalization in the UI.
+    """
+    result = execute_query(
+        """
+        SELECT
+            d.year,
+            COUNT(*) FILTER (
+                WHERE %s = ANY(ARRAY[d.n1,d.n2,d.n3,d.n4,d.n5,d.n6])
+            )                        AS frequency,
+            COUNT(*)                 AS draws
+        FROM toto2.draws d
+        GROUP BY d.year
+        ORDER BY d.year
+        """,
+        (number,),
+    )
+    return [
+        {
+            "year":      row["year"],
+            "frequency": row["frequency"],
+            "draws":     row["draws"],
+        }
+        for row in (result or [])
+    ]

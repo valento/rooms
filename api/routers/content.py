@@ -9,7 +9,7 @@ from services.auth import verify_token
 from services.embeddings import regenerate_embedding
 from services.permissions import Permissions
 from services.utils import generate_unique_slug
-from services.feed import build_center_feed
+from services.feed import build_feed
 from routers.auth import get_current_user
 
 
@@ -43,6 +43,8 @@ async def get_brick_feed(limit: int = 50):
                 cat.slug AS category_slug,
                 u.full_name as author_name,
                 u.username as author_username,
+                ar.package_name, ar.component_name,
+                ar.route_path, ar.config AS app_config,
                 -- Recency score
                 CASE 
                     WHEN AGE(NOW(), c.created_at) < INTERVAL '7 days' THEN 1.0
@@ -65,6 +67,7 @@ async def get_brick_feed(limit: int = 50):
             FROM company.content_blocks c
             LEFT JOIN company.users u ON c.author_id = u.id
             LEFT JOIN company.categories cat ON c.category_id = cat.id
+            LEFT JOIN company.apps_registry ar ON ar.content_id = c.id
             CROSS JOIN stats s
             WHERE c.metadata->>'status' = 'published'
             ORDER BY final_score DESC
@@ -81,8 +84,8 @@ async def get_brick_feed(limit: int = 50):
         apps  = [c for c in content_items if c.content_type == 'app']
 
         return BrickFeedResponse(
-            center=build_center_feed(reads),
-            left=[],    # apps — TBD
+            center=build_feed(reads),
+            left=build_feed(apps),
             right=[]
         )
         
