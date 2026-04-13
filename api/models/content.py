@@ -73,10 +73,12 @@ class ContentDetail(BaseModel):
     widget_vertical: bool = False
 
     # App registry (for content_type: "play")
+    app_id: Optional[int] = None
     package_name: Optional[str] = None
     component_name: Optional[str] = None
     route_path: Optional[str] = None
     app_config: Optional[dict] = None
+
     
     # Scoring/ranking
     view_count: int = 0
@@ -94,7 +96,7 @@ class ContentDetail(BaseModel):
     @computed_field
     @property
     def content_type(self) -> str:
-        return self.metadata.get('content_type', 'unknown')
+        return self.metadata.get('content_type', 'read')
     
     @computed_field
     @property

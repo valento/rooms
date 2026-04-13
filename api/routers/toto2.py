@@ -165,6 +165,35 @@ def get_absence():
     )
     return result or []
 
+# ---------------------------------------------------------------------------
+# GET /toto2/stats/nunmber
+# ---------------------------------------------------------------------------
+
+@router.get("/stats/number/{number}/pairs")
+def get_number_pairs(
+    number:    int,
+    year_from: int | None = None,
+    year_to:   int | None = None,
+):
+    """
+    Top 10 numbers that appeared most often in the same draw as {number}.
+    """
+    if not (1 <= number <= 49):
+        raise HTTPException(status_code=400, detail="Number must be between 1 and 49")
+
+    from services.toto2_stats import get_number_pairs, get_year_bounds
+
+    min_year, max_year = get_year_bounds()
+    yf = year_from or min_year
+    yt = year_to   or max_year
+
+    return {
+        "number":    number,
+        "year_from": yf,
+        "year_to":   yt,
+        "pairs":     get_number_pairs(number, yf, yt),
+    }
+
 
 @router.get("/stats/number/{number}/yearly")
 def get_number_yearly(number: int):

@@ -1,3 +1,4 @@
+from models.auth import CurrentUser
 from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from models.auth import UserLogin, UserRegister, Token, UserResponse
@@ -175,3 +176,33 @@ async def check_email_availability(email: str):
     result = execute_query(sql, (email,))
     
     return {"available": len(result) == 0 if result else True}
+
+
+# ----------------------------------------------------------------------
+#  HELPER Exports:
+
+security = HTTPBearer()
+def get_current_user_id(
+        credentials: HTTPAuthorizationCredentials = Depends(security)
+    ) -> int:
+
+    """Extract user_id from JWT token."""
+    token = credentials.credentials
+
+    payload = verify_token(token)
+
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user_id = payload.get("sub")
+
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    # Get user from database with role
+    sql = "SELECT id, email, role FROM company.users WHERE id = %s"
+    result = execute_query(sql, (int(user_id),))
+    if not result:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return (CurrentUser(**result[0]).id)

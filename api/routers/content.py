@@ -10,8 +10,7 @@ from services.embeddings import regenerate_embedding
 from services.permissions import Permissions
 from services.utils import generate_unique_slug
 from services.feed import build_feed
-from routers.auth import get_current_user
-
+from routers.auth import get_current_user, get_current_user_id
 
 
 router = APIRouter(prefix="/content", tags=["content"])
@@ -35,7 +34,7 @@ async def get_brick_feed(limit: int = 50):
                     MAX(social_score) as max_social
                 FROM company.content_blocks
             )
-            SELECT 
+            SELECT
                 c.id, c.title, c.deck, c.slug, c.category_id, c.body, c.metadata,
                 c.created_at, c.updated_at, c.author_id,
                 c.priority, c.view_count, c.social_score,
@@ -43,7 +42,7 @@ async def get_brick_feed(limit: int = 50):
                 cat.slug AS category_slug,
                 u.full_name as author_name,
                 u.username as author_username,
-                ar.package_name, ar.component_name,
+                ar.package_name, ar.component_name, ar.id as app_id,
                 ar.route_path, ar.config AS app_config,
                 -- Recency score
                 CASE 
@@ -67,7 +66,7 @@ async def get_brick_feed(limit: int = 50):
             FROM company.content_blocks c
             LEFT JOIN company.users u ON c.author_id = u.id
             LEFT JOIN company.categories cat ON c.category_id = cat.id
-            LEFT JOIN company.apps_registry ar ON ar.content_id = c.id
+            LEFT JOIN company.apps_registry ar ON ar.id = c.app_id
             CROSS JOIN stats s
             WHERE c.metadata->>'status' = 'published'
             ORDER BY final_score DESC
@@ -150,6 +149,10 @@ async def get_content_by_id(identifier: str):
             cb.category_id,
             cat.slug AS category_slug,
             cb.created_at, cb.updated_at,
+            ar.package_name,
+            ar.component_name,
+            ar.route_path,
+            ar.config AS app_config,
             u.full_name AS author_name,
             u.username AS author_username,
             s.prev_slug,
@@ -157,6 +160,7 @@ async def get_content_by_id(identifier: str):
         FROM company.content_blocks cb
         LEFT JOIN company.users u ON cb.author_id = u.id
         LEFT JOIN company.categories cat ON cb.category_id = cat.id
+        LEFT JOIN company.apps_registry ar ON ar.id = cb.app_id
         LEFT JOIN siblings s ON cb.id = s.id
         WHERE {where_clause}
     """
@@ -218,33 +222,7 @@ async def list_content(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to list content: {str(e)}")
 
-    
 
-security = HTTPBearer()
-def get_current_user_id(
-        credentials: HTTPAuthorizationCredentials = Depends(security)
-    ) -> int:
-
-    """Extract user_id from JWT token."""
-    token = credentials.credentials
-
-    payload = verify_token(token)
-
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    user_id = payload.get("sub")
-
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    
-    # Get user from database with role
-    sql = "SELECT id, email, role FROM company.users WHERE id = %s"
-    result = execute_query(sql, (int(user_id),))
-    if not result:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return (CurrentUser(**result[0]).id)
 
 # Create content or sequel of content
 @router.post("/", response_model=ContentDetail)
@@ -329,7 +307,6 @@ async def create_content(
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to create content: {str(e)}")
     
-
 @router.post("/{content_id}/view")
 async def track_view(
     content_id: int,
@@ -350,7 +327,6 @@ async def track_view(
     except Exception as e:
         print(f"View tracking error: {e}")
         return {"status": "error"}
-
 
 @router.put("/{content_id}", response_model=ContentDetail)
 async def update_content(
@@ -479,7 +455,3 @@ async def get_content(identifier: str):
         raise HTTPException(status_code=404, detail="Content not found")
     
     return result[0]
-
-
-# ================= Helpers ==================================================
-

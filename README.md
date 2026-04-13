@@ -1,3 +1,4 @@
+
 # Full Text Search
 ## <span style='color:red'>**!**</span> Add tsvector data for FTS
 ```sh

@@ -142,6 +142,31 @@ def get_total_draws(year_from: int, year_to: int) -> int:
     )
     return result[0]["total"] if result else 0
 
+#  ====== Get Number stats =======================
+
+def get_number_pairs(number: int, year_from: int, year_to: int) -> list[dict]:
+    """
+    Find the 10 numbers that appeared most often in the same draw as `number`
+    within the given year range.
+    """
+    result = execute_query(
+        """
+        SELECT partner, COUNT(*) AS count
+        FROM (
+            SELECT UNNEST(ARRAY[n1,n2,n3,n4,n5,n6]) AS partner
+            FROM toto2.draws
+            WHERE year BETWEEN %s AND %s
+              AND %s = ANY(ARRAY[n1,n2,n3,n4,n5,n6])
+        ) sub
+        WHERE partner != %s
+        GROUP BY partner
+        ORDER BY count DESC
+        LIMIT 10
+        """,
+        (year_from, year_to, number, number),
+    )
+    return [{"partner": row["partner"], "count": row["count"]} for row in (result or [])]
+
 
 def get_number_yearly(number: int) -> list[dict]:
     """

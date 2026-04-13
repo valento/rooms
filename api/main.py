@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from services.database import get_db_connection
-from routers import search, content, auth, categories, apps, toto2
+from routers import search, content, auth, categories, apps, toto2, polls
 
 app = FastAPI(
     title=settings.API_TITLE,
@@ -12,7 +12,10 @@ app = FastAPI(
 # CORS middleware for React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your React app URL
+    allow_origins=[
+        "http://localhost:3000",
+        "https://cleotilde-ectogenetic-viscidly.ngrok-free.dev",
+    ],  # In production, specify your React app URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +28,7 @@ app.include_router(auth.router)
 app.include_router(categories.router)
 app.include_router(apps.router)
 app.include_router(toto2.router)
+app.include_router(polls.router)
 
 @app.get("/")
 async def root():
